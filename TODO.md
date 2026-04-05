@@ -75,4 +75,4 @@
 | 2026-03-22 | Scaffold aligned with project-scaffold skill | Long-horizon agent execution |
 | 2026-03-26 | Vectorized Stage-2 combiner + category confidence | NumPy row ops replace per-day Python in `majority_combiner`; `confidence_series_from_z` replaces `.map` in `compute_category_raw_scores` (same outputs) |
 | 2026-03-30 | Vite `server.host: 127.0.0.1` | Fixes “connection failed” when opening **http://127.0.0.1:5173** while Node listened on `[::1]` only |
-| 2026-03-30 | Git init + `origin` | Local `main`; push via `scripts/create_github_repo_and_push.sh` + `GITHUB_TOKEN`, or manual steps in `docs/reports/github-push-GoldSignal_V2.md` |
+| 2026-03-30 | Git init + `origin` | `origin` → **github.com/chocherie/GoldSignal_V2**; push via `scripts/create_github_repo_and_push.sh chocherie` + `GITHUB_TOKEN` or manual steps in `docs/reports/github-push-GoldSignal_V2.md` |

@@ -7,8 +7,8 @@
 #   2. export GITHUB_TOKEN="ghp_...."   # do not commit or paste into chat
 #
 # Usage:
-#   ./scripts/create_github_repo_and_push.sh YOUR_GITHUB_USERNAME
-#   ./scripts/create_github_repo_and_push.sh YOUR_GITHUB_USERNAME MyRepoName
+#   ./scripts/create_github_repo_and_push.sh chocherie
+#   ./scripts/create_github_repo_and_push.sh chocherie MyRepoName
 #
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

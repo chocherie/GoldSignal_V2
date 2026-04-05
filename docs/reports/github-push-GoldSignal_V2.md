@@ -8,10 +8,10 @@ From the repo root, with a [classic PAT](https://github.com/settings/tokens) (**
 
 ```bash
 export GITHUB_TOKEN="ghp_xxxxxxxx"   # never commit this
-./scripts/create_github_repo_and_push.sh YOUR_GITHUB_USERNAME
+./scripts/create_github_repo_and_push.sh chocherie
 ```
 
-Optional second argument changes the repo name (default `GoldSignal_V2`).
+This project’s GitHub user is **chocherie** → **`https://github.com/chocherie/GoldSignal_V2`**. Optional second argument changes the repo name (default `GoldSignal_V2`).
 
 ## Manual: Create the empty repo on GitHub
 
@@ -21,25 +21,23 @@ Optional second argument changes the repo name (default `GoldSignal_V2`).
 4. **Do not** add a README, `.gitignore`, or license (this tree already has them).
 5. Create the repository.
 
-## 2. Point `origin` at *your* account and push
-
-Replace `YOUR_GITHUB_USERNAME` with your real GitHub username or org:
+## 2. Point `origin` at GitHub and push
 
 ```bash
 cd "/path/to/Gold Dashboard V2"
-git remote set-url origin https://github.com/YOUR_GITHUB_USERNAME/GoldSignal_V2.git
+git remote set-url origin https://github.com/chocherie/GoldSignal_V2.git
 git push -u origin main
 ```
 
 SSH (if you use keys):
 
 ```bash
-git remote set-url origin git@github.com:YOUR_GITHUB_USERNAME/GoldSignal_V2.git
+git remote set-url origin git@github.com:chocherie/GoldSignal_V2.git
 git push -u origin main
 ```
 
 If Git prompts for credentials, use a [Personal Access Token](https://github.com/settings/tokens) as the password for HTTPS, or install the [GitHub CLI](https://cli.github.com/) and run `gh auth login`.
 
-## Current local remote (adjust if wrong)
+## Current local remote
 
-After setup, `git remote -v` should show your URL. If it still references another user, run `git remote set-url` as above.
+Expected: `origin` → `https://github.com/chocherie/GoldSignal_V2.git` (`git remote -v`).
