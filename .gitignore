@@ -19,3 +19,6 @@ data/tuning_runs/
 
 # OS
 .DS_Store
+
+# Excel lock files (when a workbook is open)
+**/~$*
