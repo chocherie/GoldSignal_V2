@@ -54,6 +54,7 @@ Multi-dimensional gold / macro **data integration** (Bloomberg-primary + GPR) wi
 | `PYTHONPATH=backend python3 -m uvicorn gold_signal.api.main:app --reload --host 127.0.0.1 --port 8000` | API (manual, from repo root) |
 | `PYTHONPATH=backend python3 -m pytest tests/ -q` | Tests |
 | `cd frontend && npm run dev` | Dashboard dev server at **http://127.0.0.1:5173** (proxies `/health` + `/api` to `VITE_API_PORT`, default 8000) |
+| `./scripts/create_github_repo_and_push.sh USER` | Create **GoldSignal_V2** on GitHub and push `main` (requires `export GITHUB_TOKEN=…` PAT with **repo**); see `docs/reports/github-push-GoldSignal_V2.md` |
 
 ## Environment variables
 

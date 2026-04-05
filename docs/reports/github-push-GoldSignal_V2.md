@@ -2,7 +2,18 @@
 
 Local git is initialized on `main` with an initial commit (+ chore to drop Excel lock files).
 
-## 1. Create the empty repo on GitHub
+## Automated (create repo + push)
+
+From the repo root, with a [classic PAT](https://github.com/settings/tokens) (**repo** scope):
+
+```bash
+export GITHUB_TOKEN="ghp_xxxxxxxx"   # never commit this
+./scripts/create_github_repo_and_push.sh YOUR_GITHUB_USERNAME
+```
+
+Optional second argument changes the repo name (default `GoldSignal_V2`).
+
+## Manual: Create the empty repo on GitHub
 
 1. Open [github.com/new](https://github.com/new).
 2. **Repository name:** `GoldSignal_V2` (or rename locally if you prefer another name).
