@@ -1,0 +1,133 @@
+{
+  "cot_data.csv": {
+    "rows": 1032,
+    "columns": [
+      "managed_money_long",
+      "managed_money_short",
+      "managed_money_net",
+      "producer_long",
+      "producer_short",
+      "producer_net",
+      "swap_dealers_net",
+      "other_reportables_net"
+    ],
+    "date_range": "2006-06-13 to 2026-03-17"
+  },
+  "etf_fundamentals.csv": {
+    "rows": 5373,
+    "columns": [
+      "gld_shares",
+      "gld_aum",
+      "iau_shares",
+      "iau_aum"
+    ],
+    "date_range": "2004-11-17 to 2026-03-23"
+  },
+  "geopolitical_proxy.csv": {
+    "rows": 6591,
+    "columns": [
+      "gold_realized_vol_20d",
+      "gold_realized_vol_5d",
+      "vol_of_vol"
+    ],
+    "date_range": "2000-01-04 to 2026-03-24"
+  },
+  "gld_etf.csv": {
+    "rows": 5368,
+    "columns": [
+      "Close",
+      "Volume"
+    ],
+    "date_range": "2004-11-18 to 2026-03-23"
+  },
+  "gold_price.csv": {
+    "rows": 6591,
+    "columns": [
+      "Open",
+      "High",
+      "Low",
+      "Close",
+      "Volume"
+    ],
+    "date_range": "2000-01-04 to 2026-03-24"
+  },
+  "gpr_daily.csv": {
+    "rows": 15050,
+    "columns": [
+      "gpr_index",
+      "gpr_acts",
+      "gpr_threats"
+    ],
+    "date_range": "1985-01-01 to 2026-03-16"
+  },
+  "gpr_monthly.csv": {
+    "rows": 913,
+    "columns": [
+      "gpr_monthly",
+      "gpr_threats_monthly",
+      "gpr_acts_monthly"
+    ],
+    "date_range": "1950-02-01 to 2026-02-01"
+  },
+  "iau_etf.csv": {
+    "rows": 5320,
+    "columns": [
+      "Close",
+      "Volume"
+    ],
+    "date_range": "2005-01-28 to 2026-03-23"
+  },
+  "intermarket.csv": {
+    "rows": 7844,
+    "columns": [
+      "TNX",
+      "USGGBE10",
+      "DXY",
+      "USDJPY",
+      "VIX",
+      "SPX",
+      "HY_OAS",
+      "OIL",
+      "BTC",
+      "TIP",
+      "TWO",
+      "USGG2YR"
+    ],
+    "date_range": "2000-01-03 to 2026-03-24"
+  },
+  "market_structure_bbg.csv": {
+    "rows": 6562,
+    "columns": [
+      "gc1_open_interest",
+      "gc1_volume",
+      "gc2_price"
+    ],
+    "date_range": "2000-01-05 to 2026-03-23"
+  },
+  "seasonality.csv": {
+    "rows": 6591,
+    "columns": [
+      "month",
+      "day_of_week",
+      "is_indian_wedding_season",
+      "is_chinese_ny_period",
+      "is_september",
+      "quarter"
+    ],
+    "date_range": "2000-01-04 to 2026-03-24"
+  },
+  "silver_price.csv": {
+    "rows": 6591,
+    "columns": [
+      "Close"
+    ],
+    "date_range": "2000-01-04 to 2026-03-24"
+  },
+  "xauusd_spot.csv": {
+    "rows": 6824,
+    "columns": [
+      "Close"
+    ],
+    "date_range": "2000-01-03 to 2026-03-24"
+  }
+}

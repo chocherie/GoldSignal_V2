@@ -1,0 +1,27 @@
+---
+description: After completing any implementation, update project documentation to reflect what changed.
+alwaysApply: true
+---
+
+# Update Documentation After Every Change
+
+After completing ANY implementation work (feature, bugfix, refactor, or config change), you MUST update the relevant project documentation before considering the task done. This is not optional.
+
+## What to Update
+
+Check each of these and update if affected by your changes:
+
+1. **`TODO.md`** — Check off completed tasks. Update phase status if a phase is now complete.
+2. **`docs/quality.md`** — Update grades for any domain you touched.
+3. **`specs/README.md`** — If you implemented a feature described in a spec, update its verification status.
+4. **`specs/{system}.md`** — If reality diverged from the spec, update the spec (or the code) immediately.
+5. **`docs/plans/active/`** — If following an ExecPlan, update progress; when done, move to `docs/plans/completed/`.
+
+## Project-specific hints
+
+- Changed `scripts/integrate_bloomberg.py`? → Update `specs/data-pipeline.md` and `docs/quality.md` (Data pipeline row).
+- Changed Bloomberg Excel conventions? → Update `specs/bloomberg-bdh-paste-plan.md` or `references/bloomberg-data-guide.md`.
+
+## The Rule
+
+**Code changes without doc updates are incomplete work.**

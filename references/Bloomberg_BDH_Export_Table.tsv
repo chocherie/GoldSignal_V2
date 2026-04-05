@@ -1,0 +1,47 @@
+Dimension	Purpose	Bloomberg ticker	Yellow key	Field	Frequency	Notes
+1 Technical	Gold OHLCV (backbone)	GC1 Comdty	Comdty	PX_OPEN	Daily	Front-month COMEX gold; use continuous series if desk standard—stay consistent.
+1 Technical	Gold OHLCV	GC1 Comdty	Comdty	PX_HIGH	Daily	
+1 Technical	Gold OHLCV	GC1 Comdty	Comdty	PX_LOW	Daily	
+1 Technical	Gold OHLCV	GC1 Comdty	Comdty	PX_LAST	Daily	Primary close for signals/backtest.
+1 Technical	Gold volume	GC1 Comdty	Comdty	PX_VOLUME	Daily	
+2 Macro	10Y TIPS real yield (level)	USGGT10Y	Index	PX_LAST	Daily	Rising real yields → bearish gold in framework.
+2 Macro	Fed effective / policy proxy	FDTR	Index	PX_LAST	Daily	Use one consistent policy series.
+2 Macro	US CPI YoY	CPI YOY	Index	PX_LAST	Monthly	Month-end alignment; forward-fill to daily after merge.
+2 Macro	US Core CPI YoY	CPUPAXFE	Index	PX_LAST	Monthly	Month-end alignment; forward-fill to daily.
+2 Macro	US payroll change	NFP TCH	Index	PX_LAST	Monthly	Align to release; forward-fill to daily.
+2 Macro	Citi US economic surprise	CESIUSD	Index	PX_LAST	Daily	
+3 Sentiment	GLD price	GLD US	Equity	PX_LAST	Daily	ETF close for premium/discount vs gold.
+3 Sentiment	GLD volume	GLD US	Equity	PX_VOLUME	Daily	
+3 Sentiment	IAU price (optional)	IAU US	Equity	PX_LAST	Daily	Optional cross-check.
+3 Sentiment	IAU volume	IAU US	Equity	PX_VOLUME	Daily	Optional.
+3 Sentiment	Gold implied vol	GVZ	Index	PX_LAST	Daily	CBOE Gold Volatility Index.
+3 Sentiment	Economic surprise (shared)	CESIUSD	Index	PX_LAST	Daily	Same as Dim 2.
+4 Intermarket	US Dollar Index (DXY)	DXY	Index	PX_LAST	Daily	Verify ICE USDX ticker on your terminal if lookup fails.
+4 Intermarket	Equity vol	VIX	Index	PX_LAST	Daily	
+4 Intermarket	WTI crude front	CL1 Comdty	Comdty	PX_LAST	Daily	
+4 Intermarket	USDJPY spot	USDJPY	Curncy	PX_LAST	Daily	
+4 Intermarket	Bitcoin USD spot	XBTUSD BGN	Curncy	PX_LAST	Daily	Use desk BGN BTC/USD if this mnemonic differs.
+4 Intermarket	10Y nominal yield	USGG10YR	Index	PX_LAST	Daily	Replaces public ^TNX when BBG-primary.
+4 Intermarket	13-week T-bill yield	USGG3M	Index	PX_LAST	Daily	Short-rate context.
+4 Intermarket	TIPS ETF (companion)	TIP US	Equity	PX_LAST	Daily	Optional alongside USGGT10Y.
+4 Intermarket	Real yield (shared)	USGGT10Y	Index	PX_LAST	Daily	Same as Dim 2.
+4 Intermarket	Gold 2nd month settle	GC2 Comdty	Comdty	PX_LAST	Daily	Curve vs GC1.
+5 Flows	COT managed money long	CFFDUMML	Index	PX_LAST	Weekly	Forward-fill to daily after merge.
+5 Flows	COT managed money short	CFFDUMMS	Index	PX_LAST	Weekly	
+5 Flows	COT managed money net	CFFDUMMN	Index	PX_LAST	Weekly	
+5 Flows	COT producer/merchant long	CFFDUPML	Index	PX_LAST	Weekly	
+5 Flows	COT producer/merchant short	CFFDUPMS	Index	PX_LAST	Weekly	
+5 Flows	COT producer/merchant net	CFFDUPMN	Index	PX_LAST	Weekly	
+5 Flows	COT swap dealers net	CFFDUSWN	Index	PX_LAST	Weekly	
+5 Flows	GLD shares outstanding	GLD US	Equity	EQY_SH_OUT	Daily	T+1 reporting in live use—see execution-timing audit.
+5 Flows	GLD AUM	GLD US	Equity	FUND_TOTAL_ASSETS	Daily	
+5 Flows	IAU shares outstanding	IAU US	Equity	EQY_SH_OUT	Daily	
+5 Flows	IAU AUM	IAU US	Equity	FUND_TOTAL_ASSETS	Daily	
+7 Geopol	GVZ (fear)	GVZ	Index	PX_LAST	Daily	Same as Dim 3.
+7 Geopol	VIX (fear backup)	VIX	Index	PX_LAST	Daily	Same as Dim 4.
+8 Structure	Gold price (numerator)	GC1 Comdty	Comdty	PX_LAST	Daily	Dedupe with Dim 1 pull in practice.
+8 Structure	Silver price (denominator)	SI1 Comdty	Comdty	PX_LAST	Daily	Gold–silver ratio.
+8 Structure	Futures open interest	GC1 Comdty	Comdty	FUT_AGGTE_OPEN_INT	Daily	
+8 Structure	Futures volume	GC1 Comdty	Comdty	PX_VOLUME	Daily	Dedupe with Dim 1 if same field.
+8 Structure	Gold 2nd month	GC2 Comdty	Comdty	PX_LAST	Daily	Dedupe with Dim 4 if same field.
+8 Macro/structure	Bloomberg gold sub-index	BCOMGC	Index	PX_LAST	Daily	

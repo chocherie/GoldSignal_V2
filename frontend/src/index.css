@@ -1,0 +1,45 @@
+:root {
+  --bg: #0a0908;
+  --bg-elevated: #141210;
+  --border: #2a2622;
+  --text: #e8e4dc;
+  --muted: #8a8278;
+  --gold: #d4af37;
+  --gold-dim: #8a7028;
+  --long: #3d9a6a;
+  --long-only: #4aba9c;
+  --short: #c45c5c;
+  --neutral: #6b6560;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(ellipse 120% 80% at 50% -20%, #1a1510 0%, var(--bg) 55%);
+}
+
+#root {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+}
+
+h1,
+h2,
+h3 {
+  font-family: "DM Serif Display", Georgia, serif;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+a {
+  color: var(--gold);
+}

@@ -1,0 +1,31 @@
+"""Human-readable ids for each raw leg that feeds a category composite."""
+
+# id -> category letter, short label (UI + API)
+SUBSIGNAL_META: dict[str, dict[str, str]] = {
+    "A_mom_5d": {"category": "A", "label": "5d momentum (GC1 log ret)"},
+    "A_mom_20d": {"category": "A", "label": "20d momentum"},
+    "A_mom_60d": {"category": "A", "label": "60d momentum"},
+    "A_rsi": {"category": "A", "label": "RSI(14) vs 50 (z)"},
+    "A_macd": {"category": "A", "label": "MACD histogram (z)"},
+    "A_oi": {"category": "A", "label": "5d %Δ open interest (z)"},
+    "A_curve": {"category": "A", "label": "GC2/GC1 curve 20d Δ log ratio (z)"},
+    "A_gc12_spread": {"category": "A", "label": "GC1−GC2 20d Δ (z)"},
+    "A_lease": {"category": "A", "label": "Gold lease / forward 20d Δ (z)"},
+    "A_india_prem": {"category": "A", "label": "India gold premium 20d Δ (z)"},
+    "A_china_prem": {"category": "A", "label": "China gold premium 20d Δ (z)"},
+    "A_cb_holdings": {"category": "A", "label": "Central bank gold holdings 20d Δ (z)"},
+    "A_china_import": {"category": "A", "label": "China gold import 20d Δ (z)"},
+    "A_india_import": {"category": "A", "label": "India gold import 20d Δ (z)"},
+    "B_nom": {"category": "B", "label": "10Y nominal Δ20d (z, −Δ)"},
+    "B_real": {"category": "B", "label": "Real / breakeven Δ20d (z, −Δ)"},
+    "B_shadow": {"category": "B", "label": "Shadow (inactive · no series)"},
+    "B_2s10s": {"category": "B", "label": "2s10s spread Δ20d (z, −Δ)"},
+    "C_dxy": {"category": "C", "label": "DXY log Δ20d (z, −Δ)"},
+    "D_vix": {"category": "D", "label": "Log VIX Δ20d (z)"},
+    "F_cot_mm": {"category": "F", "label": "COT managed-money net (level z)"},
+    "F_cot_prod": {"category": "F", "label": "COT producer net (level z)"},
+    "F_cot_other": {"category": "F", "label": "COT other reportables net (level z)"},
+    "F_imm_legacy": {"category": "F", "label": "COT legacy non-commercial net (level z)"},
+    "F_etf": {"category": "F", "label": "GLD shares 5d %Δ (z)"},
+    "G_gpr": {"category": "G", "label": "GPR monthly Δ3 (z)"},
+}

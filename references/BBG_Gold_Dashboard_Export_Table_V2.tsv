@@ -1,0 +1,55 @@
+Dimension	Purpose	Bloomberg Security (row 4, col 1 of each 3-col block)	Field (row 4, col 2)	BDH Period	BDH Type	Parser output / panel column	Notes
+1 Technical / execution	Gold open	GC1 Comdty	PX_OPEN	D	D	gc1_px_open → gold_price Open
+1 Technical / execution	Gold high	GC1 Comdty	PX_HIGH	D	D	gc1_px_high
+1 Technical / execution	Gold low	GC1 Comdty	PX_LOW	D	D	gc1_px_low
+1 Technical / execution	Gold close (signals)	GC1 Comdty	PX_LAST	D	D	gc1_px_last → gold_price Close
+1 Technical / execution	Gold futures volume	GC1 Comdty	VOLUME	D	D	gc1_volume
+1 Technical / execution	Gold open interest	GC1 Comdty	OPEN_INT	D	D	gc1_open_interest
+1 Technical / execution	Execution / P&amp;L spine	XAUUSD Curncy	PX_LAST	D	D	xau_usd → xauusd_spot.csv	COB-aligned spot for backtest.
+1 Technical / execution	Gold 2nd month (GC1–GC2 curve)	GC2 Comdty	PX_LAST	D	D	gc2_price → market_structure_bbg.csv	Used for A_curve + A_gc12_spread signals.
+2 Macro	10Y real yield (alt)	USGGT10Y Index	PX_LAST	D	D	real_yield_10y	Merged to intermarket as REAL_YIELD_10Y.
+2 Macro	10Y TIPS real	GTII10 Govt	PX_LAST	D	D	tips_real_10y → intermarket TIPS_REAL_10Y
+2 Macro	Fed funds effective	FDTR Index	PX_LAST	D	D	fed_funds → intermarket FED_FUNDS
+2 Macro	US CPI YoY	CPI YOY Index	PX_LAST	D	D	cpi_yoy → intermarket CPI_YOY
+2 Macro	US core CPI YoY	CPUPAXFE Index	PX_LAST	D	D	core_cpi_yoy → intermarket CORE_CPI_YOY
+2 Macro	Payrolls change	NFP TCH Index	PX_LAST	D	D	nfp_change → intermarket NFP_CHANGE
+2 Macro	Citi US economic surprise	CESIUSD Index	PX_LAST	D	D	cesiusd → intermarket ECON_SURPRISE
+3 Sentiment / ETF prices	GLD close	GLD US Equity	PX_LAST	D	D	gld_close → gld_etf.csv
+3 Sentiment / ETF volumes (→ total gold ETF volume on panel)	GLD US Equity	PX_VOLUME	D	D	gld_volume	Panel: gld_etf_volume; summed with IAU as gold_etf_volume_total.
+3 Sentiment / ETF flow input	GLD US Equity	EQY_SH_OUT	D	D	gld_shares → etf_fundamentals; F_etf signal uses 5d %Δ after lag
+3 Sentiment	GLD AUM	GLD US Equity	FUND_TOTAL_ASSETS	D	D	gld_aum
+3 Sentiment	IAU close	IAU US Equity	PX_LAST	D	D	iau_close → iau_etf.csv
+3 Sentiment	IAU volume (→ total gold ETF volume)	IAU US Equity	PX_VOLUME	D	D	iau_volume	Panel: iau_etf_volume.
+3 Sentiment	IAU shares	IAU US Equity	EQY_SH_OUT	D	D	iau_shares
+3 Sentiment	IAU AUM	IAU US Equity	FUND_TOTAL_ASSETS	D	D	iau_aum
+3 Sentiment	Gold implied vol	GVZ Index	PX_LAST	D	D	gvz → intermarket GVZ
+3 Sentiment	BCOM gold sub-index	BCOMGC Index	PX_LAST	D	D	bcomgc → intermarket BCOMGC
+4 Intermarket	US Dollar Index	DXY Curncy	PX_LAST	D	D	DXY
+4 Intermarket	USDJPY	USDJPY Curncy	PX_LAST	D	D	USDJPY
+4 Intermarket	VIX	VIX Index	PX_LAST	D	D	VIX
+4 Intermarket	S&amp;P 500	SPX Index	PX_LAST	D	D	SPX
+4 Intermarket	WTI crude	CL1 Comdty	PX_LAST	D	D	OIL
+4 Intermarket	Bitcoin USD	XBTUSD Curncy	PX_LAST	D	D	BTC	Use desk spot if BGN line differs.
+4 Intermarket	TIPS ETF	TIP US Equity	PX_LAST	D	D	TIP
+4 Intermarket	10Y nominal	USGG10YR Index	PX_LAST	D	D	TNX
+4 Intermarket	2Y nominal	USGG2YR Index	PX_LAST	D	D	USGG2YR	FRED DGS2 fallback if missing.
+4 Intermarket	10Y breakeven	USGGBE10 Index	PX_LAST	D	D	USGGBE10
+4 Intermarket	13-week T-bill	USGG3M Index	PX_LAST	D	D	TWO
+4 Intermarket	HY OAS	H0A0 Index	PX_LAST	D	D	HY_OAS
+8 Structure	Silver (G/S ratio)	SI1 Comdty	PX_LAST	D	D	si1_px_last → silver_price.csv
+6 Optional A — physical / regional (verify DES; placeholders)	Gold lease / forward proxy	GOLDLNPM Index	PX_LAST	D	D	gold_lease_rate → GOLD_LEASE
+6 Optional A — premium	India premium (replace if invalid)	GOLDIPREM Index	PX_LAST	D	D	gold_india_premium → GOLD_INDIA_PREM
+6 Optional A — premium	China premium (replace if invalid)	GOLDCHPREM Index	PX_LAST	D	D	gold_china_premium → GOLD_CHINA_PREM
+6 Optional A — official / trade	Central bank holdings (replace if invalid)	GOLDCBH Index	PX_LAST	D	D	gold_cb_holdings → GOLD_CB_HOLDINGS
+6 Optional A — imports	China gold imports (replace if invalid)	CHGLDIMP Index	PX_LAST	D	D	gold_china_import → GOLD_CHINA_IMPORT
+6 Optional A — imports	India gold imports (replace if invalid)	INGLDIMP Index	PX_LAST	D	D	gold_india_import → GOLD_INDIA_IMPORT
+5 Flows COT — disaggregated COMEX gold (weekly)	Managed money long	CFFDUMML Index	PX_LAST	W	W	managed_money_long
+5 Flows COT	Managed money short	CFFDUMMS Index	PX_LAST	W	W	managed_money_short
+5 Flows COT	Managed money net	CFFDUMMN Index	PX_LAST	W	W	managed_money_net
+5 Flows COT	Producer long	CFFDUPML Index	PX_LAST	W	W	producer_long
+5 Flows COT	Producer short	CFFDUPMS Index	PX_LAST	W	W	producer_short
+5 Flows COT	Producer net	CFFDUPMN Index	PX_LAST	W	W	producer_net
+5 Flows COT	Swap dealers net	CFFDUSWN Index	PX_LAST	W	W	swap_dealers_net
+5 Flows COT — extended positioning (verify DES)	Other reportables net	CFFDUORN Index	PX_LAST	W	W	other_reportables_net
+5 Flows COT — legacy non-commercial net (verify DES)	Legacy non-comm net	GCNCN Index	PX_LAST	W	W	legacy_noncomm_net
+—	Not on Bloomberg — download separately	GPR daily / monthly	—	—	—	data/raw from matteoiacoviello.com	Forward-filled in integrate; not a BDH row.

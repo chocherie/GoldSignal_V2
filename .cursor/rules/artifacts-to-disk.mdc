@@ -1,0 +1,19 @@
+---
+description: Write all important outputs (plans, specs, reports, analysis) to the project tree, never only in conversation.
+alwaysApply: true
+---
+
+# Write Artifacts to Disk
+
+Every important output you produce must be written to the project tree. Do not leave plans, analysis, specs, or reports only in the conversation — they will be lost.
+
+## Where Artifacts Go
+
+| What you produced | Write it to |
+| :--- | :--- |
+| Execution plan for complex work | `docs/plans/active/{name}.md` |
+| New or updated system spec | `specs/{system}.md` (and update `specs/README.md` index) |
+| Analysis or audit report | `docs/reports/{name}.md` |
+| Architecture decision | `docs/architecture.md` or the relevant spec |
+| Quality assessment | `docs/quality.md` |
+| New workflow | `.agents/workflows/{name}.md` |

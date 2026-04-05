@@ -1,0 +1,21 @@
+# Local overrides (API port, secrets)
+.env.local
+frontend/.env.local
+*.local
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Research tuning outputs (large CSV/JSON)
+data/tuning_runs/
+
+# OS
+.DS_Store

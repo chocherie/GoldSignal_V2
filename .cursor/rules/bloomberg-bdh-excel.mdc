@@ -1,0 +1,15 @@
+---
+description: Bloomberg BDH in Excel — 3-col blocks or 2-col pairs; A1/A2 range; plain BDH only.
+globs: references/**/BBG*.tsv,references/**/bloomberg*.md,references/**/*Bloomberg*,specs/bloomberg-bdh-paste-plan.md,data/raw/Bloomberg/**/*.xlsx
+alwaysApply: false
+---
+
+When adding or editing Bloomberg Excel `BDH` paste templates for this project:
+
+- Use **plain `=BDH(...)` only** — **no `CHOOSECOLS`** unless the user explicitly asks.
+- **Preferred — 3-column blocks:** each series uses **(Security, Field, blank)** on row 4; **one** `BDH` in the **first** column of the block on **row 5**: `=BDH(L4,M4,$A$1,$A$2,"Per","D"|"W")`; spill = Date | Value in columns 1–2; column 3 is spacer. See `specs/bloomberg-bdh-paste-plan.md` and `references/BBG_Gold_Dashboard_3col_BDH_Template.tsv`.
+- **Legacy — two columns per series:** `BDH` in the **left** cell of each pair; spill = Date | Value; right cell on the formula row stays empty.
+- **Start/end** cells **`$A$1` / `$A$2`** for BDH range.
+- **Do not** stack `BDH` down one column.
+- **Deliver paste-ready layouts in chat:** output the table as **tab-separated text** inside a fenced code block (`text` or `tsv`) so the user can copy → paste into Excel → **Shift+F9** / Bloomberg refresh. **Do not** write or overwrite `references/BBG_BDH_Excel_Paste_Table.tsv` just to share headers or a new template — only touch that file when the user explicitly asks to update the repo reference.
+- **Live templates:** `references/BBG_Gold_Dashboard_3col_BDH_Template.tsv`, `references/BBG_US_Equity_3col_BDH_Template.tsv`. **Static snapshot:** `references/BBG_BDH_Excel_Paste_Table.tsv`. Skill: `~/.cursor/skills/bloomberg-excel-bdh/SKILL.md`.
