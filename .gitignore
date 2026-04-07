@@ -1,4 +1,5 @@
 # Local overrides (API port, secrets)
+.env
 .env.local
 frontend/.env.local
 *.local

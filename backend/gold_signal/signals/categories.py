@@ -67,6 +67,13 @@ def compute_category_raw_scores(panel: pd.DataFrame, cfg: Settings | None = None
     z_cn_imp = _z_level_or_nan("GOLD_CHINA_IMPORT")
     z_in_imp = _z_level_or_nan("GOLD_INDIA_IMPORT")
 
+    si1 = panel.get("SI1")
+    if si1 is not None and si1.notna().any():
+        gsr = close / si1.replace(0, np.nan)
+        z_gsr = rolling_z(gsr.diff(20), w, zc)
+    else:
+        z_gsr = pd.Series(np.nan, index=panel.index)
+
     raw_a = _nanmean_row(
         pd.DataFrame(
             {
@@ -82,6 +89,7 @@ def compute_category_raw_scores(panel: pd.DataFrame, cfg: Settings | None = None
                 "b": z_cb,
                 "ci": z_cn_imp,
                 "ii": z_in_imp,
+                "gsr": z_gsr,
             }
         )
     )
@@ -99,6 +107,7 @@ def compute_category_raw_scores(panel: pd.DataFrame, cfg: Settings | None = None
     out["subz_A_cb_holdings"] = z_cb
     out["subz_A_china_import"] = z_cn_imp
     out["subz_A_india_import"] = z_in_imp
+    out["subz_A_gsr"] = z_gsr
 
     rv20 = close.pct_change(fill_method=None).rolling(20, min_periods=10).std()
     rv_med = rv20.rolling(w, min_periods=60).median()
@@ -134,13 +143,22 @@ def compute_category_raw_scores(panel: pd.DataFrame, cfg: Settings | None = None
     else:
         z_curve_rates = pd.Series(np.nan, index=panel.index)
 
+    cesi = panel.get("CESI")
+    if cesi is not None and cesi.notna().any():
+        z_cesi = rolling_z(-cesi, w, zc)
+    else:
+        z_cesi = pd.Series(np.nan, index=panel.index)
+
     raw_b = _nanmean_row(
-        pd.DataFrame({"n": z_nom, "r": z_real, "s": z_shadow, "c": z_curve_rates})
+        pd.DataFrame(
+            {"n": z_nom, "r": z_real, "s": z_shadow, "c": z_curve_rates, "e": z_cesi}
+        )
     )
     out["subz_B_nom"] = z_nom
     out["subz_B_real"] = z_real
     out["subz_B_shadow"] = z_shadow
     out["subz_B_2s10s"] = z_curve_rates
+    out["subz_B_cesi"] = z_cesi
 
     # --- C: USD ---
     dxy = panel.get("DXY")
@@ -151,14 +169,24 @@ def compute_category_raw_scores(panel: pd.DataFrame, cfg: Settings | None = None
         raw_c = pd.Series(np.nan, index=panel.index)
     out["subz_C_dxy"] = raw_c
 
-    # --- D: risk (VIX log change) ---
+    # --- D: risk (VIX + GVZ log change) ---
     vix = panel.get("VIX")
     if vix is not None and vix.notna().any():
         lv = np.log(vix.replace(0, np.nan).clip(lower=1e-6))
-        raw_d = rolling_z(lv.diff(20), w, zc)
+        z_vix = rolling_z(lv.diff(20), w, zc)
     else:
-        raw_d = pd.Series(np.nan, index=panel.index)
-    out["subz_D_vix"] = raw_d
+        z_vix = pd.Series(np.nan, index=panel.index)
+
+    gvz = panel.get("GVZ")
+    if gvz is not None and gvz.notna().any():
+        lg = np.log(gvz.replace(0, np.nan).clip(lower=1e-6))
+        z_gvz = rolling_z(lg.diff(20), w, zc)
+    else:
+        z_gvz = pd.Series(np.nan, index=panel.index)
+
+    raw_d = _nanmean_row(pd.DataFrame({"vix": z_vix, "gvz": z_gvz}))
+    out["subz_D_vix"] = z_vix
+    out["subz_D_gvz"] = z_gvz
 
     # --- F: flow ---
     mm = panel.get("cot_managed_money_net")

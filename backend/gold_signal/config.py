@@ -6,6 +6,16 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
+try:
+    from dotenv import load_dotenv
+
+    # Load <repo_root>/.env if present so SUPABASE_* vars are available without
+    # needing the user to export them in every shell.
+    _repo_root = Path(__file__).resolve().parents[2]
+    load_dotenv(_repo_root / ".env")
+except Exception:
+    pass
+
 
 def default_project_root() -> Path:
     # backend/gold_signal/config.py -> parents[2] = repo root
@@ -41,6 +51,16 @@ class Settings:
     )
     tuning_run_dir: str = field(
         default_factory=lambda: (os.environ.get("GOLD_TUNING_RUN_DIR") or "").strip()
+    )
+    supabase_url: str = field(default_factory=lambda: os.environ.get("SUPABASE_URL", ""))
+    supabase_service_key: str = field(
+        default_factory=lambda: os.environ.get("SUPABASE_SERVICE_KEY", "")
+    )
+    supabase_table: str = field(
+        default_factory=lambda: os.environ.get("GOLD_SUPABASE_TABLE", "daily_prices")
+    )
+    supabase_observation_start: str = field(
+        default_factory=lambda: os.environ.get("GOLD_SUPABASE_START", "1990-01-01")
     )
 
     def resolved_data_dir(self) -> Path:

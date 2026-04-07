@@ -1,4 +1,4 @@
-"""Load merged CSV panel + lags (COT, GLD) + ETF volumes + optional FRED backup for missing 2Y."""
+"""Load merged market panel from Supabase `daily_prices` (long → wide)."""
 
 from __future__ import annotations
 
@@ -9,150 +9,169 @@ import numpy as np
 import pandas as pd
 
 from gold_signal.config import Settings, settings
-from gold_signal.etl.fred import fetch_fred_series
+from gold_signal.etl.supabase_client import fetch_daily_prices, get_client
 
 
-def _read_csv_index(path: Path, **kw) -> pd.DataFrame:
-    return pd.read_csv(path, index_col=0, parse_dates=True, **kw)
+# ticker → {supabase_field: panel_column}
+TICKER_MAP: dict[str, dict[str, str]] = {
+    "GC1_Comdty": {
+        "open": "gc1_open",
+        "high": "gc1_high",
+        "low": "gc1_low",
+        "close": "gc1_close",
+        "volume": "gc1_volume",
+    },
+    "GC2_Comdty": {"close": "gc2_price"},
+    "XAUUSD_Curncy": {"close": "xauusd"},
+    "USGG10YR_Index": {"close": "TNX"},
+    "USGG2YR_Index": {"close": "USGG2YR"},
+    "USGGBE10_Index": {"close": "USGGBE10"},
+    "DXY_Index": {"close": "DXY"},
+    "USDJPY_Curncy": {"close": "USDJPY"},
+    "VIX_Index": {"close": "VIX"},
+    "SPX_Index": {"close": "SPX"},
+    "H0A0_Index": {"close": "HY_OAS"},
+    "CL1_Comdty": {"close": "OIL"},
+    "XBTUSD_BGN_Curncy": {"close": "BTC"},
+    "TIP_US_Equity": {"close": "TIP"},
+    "GVZ_Index": {"close": "GVZ"},
+    "XAUL1M_Curncy": {"close": "GOLD_LEASE"},
+    "GTII10_Govt": {"close": "TIPS_REAL_10Y"},
+    "CFFDUORN_Index": {"close": "cot_other_reportables_net"},
+    "GPRXGPRD_Index": {"close": "gpr_daily"},
+    ".SHFEPREM_Index": {"close": "GOLD_CHINA_PREM"},
+    ".GOLDPRM_Index": {"close": "GOLD_PREMIUM"},
+    "SI1_Comdty": {"close": "SI1"},
+    "CESIUSD_Index": {"close": "CESI"},
+    "BCOMGC_Index": {"close": "BCOMGC"},
+    "GOLDLNPM_Index": {"close": "GOLD_LN_PM"},
+    "GLD_US_Equity": {"volume": "gld_etf_volume"},
+    "IAU_US_Equity": {"volume": "iau_etf_volume"},
+    "CFFDUMML_Index": {"close": "cot_managed_money_long"},
+    "CFFDUMMS_Index": {"close": "cot_managed_money_short"},
+    "CFFDUMMN_Index": {"close": "cot_managed_money_net"},
+    "CFFDUPML_Index": {"close": "cot_producer_long"},
+    "CFFDUPMS_Index": {"close": "cot_producer_short"},
+    "CFFDUPMN_Index": {"close": "cot_producer_net"},
+}
 
 
-def load_raw_panel(data_dir: Path | str, cfg: Settings | None = None) -> tuple[pd.DataFrame, dict]:
-    """Load on-disk CSVs written by scripts/integrate_bloomberg.py."""
+COT_COLUMNS = (
+    "cot_managed_money_long",
+    "cot_managed_money_short",
+    "cot_managed_money_net",
+    "cot_producer_long",
+    "cot_producer_short",
+    "cot_producer_net",
+    "cot_other_reportables_net",
+)
+
+
+def load_raw_panel(
+    data_dir: Path | str | None = None, cfg: Settings | None = None
+) -> tuple[pd.DataFrame, dict]:
+    """Build the wide market panel from Supabase `daily_prices`.
+
+    `data_dir` is accepted for backwards compatibility but ignored.
+    """
     cfg = cfg or settings
-    data_dir = Path(data_dir)
-    meta: dict = {"warnings": [], "files": {}}
+    meta: dict = {"source": "supabase", "warnings": []}
 
-    gold = _read_csv_index(data_dir / "gold_price.csv")
-    meta["files"]["gold_price"] = str(data_dir / "gold_price.csv")
+    client = get_client(cfg)
+    long_df = fetch_daily_prices(
+        client,
+        cfg.supabase_table,
+        list(TICKER_MAP.keys()),
+        cfg.supabase_observation_start,
+    )
 
-    xau_path = data_dir / "xauusd_spot.csv"
-    if xau_path.is_file():
-        xau = _read_csv_index(xau_path)
-        if "Close" in xau.columns:
-            xau_s = xau["Close"].rename("xauusd")
-        else:
-            xau_s = xau.iloc[:, 0].rename("xauusd")
-    else:
-        xau_s = gold["Close"].rename("xauusd")
-        meta["warnings"].append(
-            "xauusd_spot.csv missing — using GC1 Close as execution proxy (not plan-compliant; re-run integrate with XAUUSD in BDH export)."
+    if long_df.empty:
+        raise RuntimeError(
+            f"No rows returned from Supabase table {cfg.supabase_table!r} "
+            f"for the configured tickers (start={cfg.supabase_observation_start})."
         )
 
-    im_path = data_dir / "intermarket.csv"
-    if not im_path.is_file():
-        raise FileNotFoundError(f"intermarket.csv not found under {data_dir}")
-    inter = _read_csv_index(im_path)
-    meta["files"]["intermarket"] = str(im_path)
-
-    ms_path = data_dir / "market_structure_bbg.csv"
-    if ms_path.is_file():
-        ms = _read_csv_index(ms_path)
-        meta["files"]["market_structure"] = str(ms_path)
-    else:
-        ms = pd.DataFrame()
-
-    etf_path = data_dir / "etf_fundamentals.csv"
-    if etf_path.is_file():
-        etf = _read_csv_index(etf_path)
-        meta["files"]["etf_fundamentals"] = str(etf_path)
-    else:
-        etf = pd.DataFrame()
-
-    cot_path = data_dir / "cot_data.csv"
-    if cot_path.is_file():
-        cot = _read_csv_index(cot_path)
-        meta["files"]["cot"] = str(cot_path)
-    else:
-        cot = pd.DataFrame()
-        meta["warnings"].append("cot_data.csv missing — category F COT leg degraded.")
-
-    gpr_path = data_dir / "gpr_monthly.csv"
-    if gpr_path.is_file():
-        gpr = _read_csv_index(gpr_path)
-        meta["files"]["gpr_monthly"] = str(gpr_path)
-    else:
-        gpr = pd.DataFrame()
-
-    idx = gold.index.union(xau_s.index).union(inter.index).sort_values().unique()
-    idx = pd.DatetimeIndex(idx)
-
+    idx = pd.DatetimeIndex(sorted(long_df["date"].unique()))
     panel = pd.DataFrame(index=idx)
-    panel["gc1_close"] = gold["Close"].reindex(idx)
-    panel["gc1_open"] = gold["Open"].reindex(idx) if "Open" in gold.columns else panel["gc1_close"]
-    panel["gc1_high"] = gold["High"].reindex(idx) if "High" in gold.columns else panel["gc1_close"]
-    panel["gc1_low"] = gold["Low"].reindex(idx) if "Low" in gold.columns else panel["gc1_close"]
-    panel["gc1_volume"] = gold["Volume"].reindex(idx) if "Volume" in gold.columns else np.nan
-    panel["xauusd"] = xau_s.reindex(idx)
 
-    for c in inter.columns:
-        panel[c] = inter[c].reindex(idx)
+    tickers_loaded: list[str] = []
+    missing: list[str] = []
 
-    if not ms.empty:
-        panel["gc2_price"] = ms["gc2_price"].reindex(idx) if "gc2_price" in ms.columns else np.nan
-        panel["gc1_open_interest"] = (
-            ms["gc1_open_interest"].reindex(idx) if "gc1_open_interest" in ms.columns else np.nan
-        )
-    else:
-        panel["gc2_price"] = np.nan
-        panel["gc1_open_interest"] = np.nan
+    for ticker, field_map in TICKER_MAP.items():
+        sub = long_df.loc[long_df["ticker"] == ticker]
+        if sub.empty:
+            missing.append(ticker)
+            for col in field_map.values():
+                panel[col] = np.nan
+            continue
+        tickers_loaded.append(ticker)
+        sub = sub.set_index("date").sort_index()
+        # Some tickers have multiple rows per date in Supabase — keep the last.
+        sub = sub[~sub.index.duplicated(keep="last")]
+        for field, panel_col in field_map.items():
+            if field in sub.columns:
+                panel[panel_col] = pd.to_numeric(sub[field], errors="coerce").reindex(idx)
+            else:
+                panel[panel_col] = np.nan
 
-    if "gld_shares" in etf.columns:
-        panel["gld_shares"] = etf["gld_shares"].reindex(idx)
-    else:
-        panel["gld_shares"] = np.nan
-        meta["warnings"].append("gld_shares missing — F ETF leg degraded.")
+    # Legacy alias used by some downstream code paths
+    if "USGG2YR" in panel.columns:
+        panel["TWO"] = panel["USGG2YR"]
 
-    panel["gld_etf_volume"] = np.nan
-    panel["iau_etf_volume"] = np.nan
-    for fname, col in (("gld_etf.csv", "gld_etf_volume"), ("iau_etf.csv", "iau_etf_volume")):
-        ep = data_dir / fname
-        if ep.is_file():
-            meta["files"][fname.replace(".csv", "")] = str(ep)
-            edf = _read_csv_index(ep)
-            if "Volume" in edf.columns:
-                panel[col] = edf["Volume"].reindex(idx)
-
-    vol_pair = panel[["gld_etf_volume", "iau_etf_volume"]]
-    panel["gold_etf_volume_total"] = vol_pair.sum(axis=1, min_count=1)
-
-    if not cot.empty and "managed_money_net" in cot.columns:
-        lag = cfg.cot_release_lag_bdays
-        cot_shifted = cot.copy()
-        cot_shifted.index = cot_shifted.index + pd.tseries.offsets.BDay(lag)
-        for c in cot.columns:
-            panel[f"cot_{c}"] = cot_shifted[c].reindex(idx).ffill()
-    else:
-        for c in (
-            "managed_money_net",
-            "producer_net",
-            "managed_money_long",
-            "managed_money_short",
-            "producer_long",
-            "producer_short",
-        ):
-            panel[f"cot_{c}"] = np.nan
-
-    if panel["gld_shares"].notna().any():
-        panel["gld_shares_lagged"] = panel["gld_shares"].shift(cfg.gld_flow_lag_bdays)
-    else:
-        panel["gld_shares_lagged"] = np.nan
-
-    if not gpr.empty and "gpr_monthly" in gpr.columns:
-        gpr_shifted = gpr["gpr_monthly"].copy()
-        gpr_shifted.index = gpr_shifted.index + pd.DateOffset(months=1)
-        panel["gpr_monthly"] = gpr_shifted.reindex(idx).ffill()
+    # gpr_daily → gpr_monthly forward-filled (categories.py expects gpr_monthly)
+    if "gpr_daily" in panel.columns and panel["gpr_daily"].notna().any():
+        panel["gpr_monthly"] = panel["gpr_daily"].ffill()
     else:
         panel["gpr_monthly"] = np.nan
 
-    panel["shadow_rate"] = np.nan
+    # ETF volume aggregate
+    gld_v = panel.get("gld_etf_volume", pd.Series(np.nan, index=idx))
+    iau_v = panel.get("iau_etf_volume", pd.Series(np.nan, index=idx))
+    panel["gold_etf_volume_total"] = (
+        pd.DataFrame({"g": gld_v, "i": iau_v}).sum(axis=1, min_count=1)
+    )
 
-    if "USGG2YR" not in panel.columns or panel["USGG2YR"].isna().all():
-        d2 = fetch_fred_series("DGS2", api_key=cfg.fred_api_key)
-        if d2.empty:
-            panel["USGG2YR"] = np.nan
-        else:
-            panel["USGG2YR"] = d2.reindex(idx).ffill()
-            meta["warnings"].append("USGG2YR missing from Bloomberg — using FRED DGS2 where available.")
+    # COT release lag (data is published with a few business-day delay)
+    lag = cfg.cot_release_lag_bdays
+    if lag:
+        for col in COT_COLUMNS:
+            if col in panel.columns and panel[col].notna().any():
+                shifted = panel[col].copy()
+                shifted.index = shifted.index + pd.tseries.offsets.BDay(lag)
+                shifted = shifted[~shifted.index.duplicated(keep="last")]
+                panel[col] = shifted.reindex(idx).ffill()
 
-    meta["as_of_utc"] = datetime.now(timezone.utc).isoformat()
+    # Optional series not present in Supabase yet — keep columns NaN so signals degrade.
+    for opt_col in (
+        "gc1_open_interest",
+        "gld_shares",
+        "gld_aum",
+        "iau_shares",
+        "iau_aum",
+        "gld_shares_lagged",
+        "GOLD_INDIA_PREM",
+        "GOLD_CB_HOLDINGS",
+        "GOLD_CHINA_IMPORT",
+        "GOLD_INDIA_IMPORT",
+        "shadow_rate",
+    ):
+        if opt_col not in panel.columns:
+            panel[opt_col] = np.nan
+
+    panel = panel.sort_index()
+
+    meta.update(
+        {
+            "tickers_loaded": tickers_loaded,
+            "missing_tickers": missing,
+            "rows": int(len(panel)),
+            "as_of_utc": datetime.now(timezone.utc).isoformat(),
+            "table": cfg.supabase_table,
+            "start": cfg.supabase_observation_start,
+        }
+    )
+    if missing:
+        meta["warnings"].append(
+            f"Tickers missing from {cfg.supabase_table}: {', '.join(missing)}"
+        )
     return panel, meta

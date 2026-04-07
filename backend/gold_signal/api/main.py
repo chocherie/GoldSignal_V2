@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import time
 from pathlib import Path
 
 from contextlib import asynccontextmanager
@@ -37,7 +38,9 @@ from gold_signal.signals.tuned_overlays import resolve_tuning_run_dir, tuning_ru
 log = logging.getLogger("gold_signal.api")
 
 _cache: tuple | None = None
-_cache_key: tuple[float, float] | None = None
+_cache_loaded_at: float = 0.0
+_cache_tuning_key: float = 0.0
+_CACHE_TTL_SECONDS = float(os.environ.get("GOLD_CACHE_TTL_SECONDS", "300"))
 
 
 def _data_dir() -> Path:
@@ -54,41 +57,43 @@ def _strategy_payload() -> dict:
     }
 
 
-def _cache_invalidation_key() -> tuple[float, float]:
-    data_dir = _data_dir()
-    im = data_dir / "intermarket.csv"
-    mt_data = im.stat().st_mtime if im.is_file() else 0.0
-    tr = resolve_tuning_run_dir(settings)
-    mt_tune = tuning_run_mtime(tr)
-    return (mt_data, mt_tune)
-
-
 def get_signal_frame():
-    """Load panel and rebuild signals; cache invalidates when data or tuning-run CSV mtime changes."""
-    global _cache, _cache_key
-    key = _cache_invalidation_key()
-    if _cache is not None and _cache_key == key:
+    """Load panel from Supabase and rebuild signals; cached for ``GOLD_CACHE_TTL_SECONDS``.
+
+    Cache also invalidates immediately if the active tuning-run directory mtime changes.
+    """
+    global _cache, _cache_loaded_at, _cache_tuning_key
+    tr = resolve_tuning_run_dir(settings)
+    tuning_key = tuning_run_mtime(tr)
+    now = time.monotonic()
+    fresh = (
+        _cache is not None
+        and (now - _cache_loaded_at) < _CACHE_TTL_SECONDS
+        and tuning_key == _cache_tuning_key
+    )
+    if fresh:
         return _cache
-    data_dir = _data_dir()
-    panel, meta = load_raw_panel(data_dir, settings)
+    panel, meta = load_raw_panel(None, settings)
     sig = build_signal_table(panel, settings)
     _cache = (panel, meta, sig)
-    _cache_key = key
+    _cache_loaded_at = now
+    _cache_tuning_key = tuning_key
     return _cache
 
 
 def clear_signal_cache() -> None:
-    global _cache, _cache_key
+    global _cache, _cache_loaded_at, _cache_tuning_key
     _cache = None
-    _cache_key = None
+    _cache_loaded_at = 0.0
+    _cache_tuning_key = 0.0
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
         get_signal_frame()
-    except FileNotFoundError:
-        pass
+    except Exception as exc:  # pragma: no cover - startup best-effort
+        log.warning("get_signal_frame() failed during startup: %s", exc)
     yield
     clear_signal_cache()
 
@@ -137,7 +142,7 @@ def health():
 def meta():
     try:
         panel, m, sig = get_signal_frame()
-    except FileNotFoundError as e:
+    except (FileNotFoundError, RuntimeError) as e:
         raise HTTPException(503, detail=str(e)) from e
     return sanitize(
         {
@@ -158,7 +163,7 @@ def meta():
 def signals_latest():
     try:
         panel, m, sig = get_signal_frame()
-    except FileNotFoundError as e:
+    except (FileNotFoundError, RuntimeError) as e:
         raise HTTPException(503, detail=str(e)) from e
     if sig.empty:
         raise HTTPException(503, detail="empty signal table")
@@ -253,7 +258,7 @@ def signals_latest():
 def _backtest_walk_forward_payload():
     try:
         panel, m, sig = get_signal_frame()
-    except FileNotFoundError as e:
+    except (FileNotFoundError, RuntimeError) as e:
         raise HTTPException(503, detail=str(e)) from e
     rep = walk_forward_report(sig["strat_return"], settings)
     rep_lo = walk_forward_report(sig["strat_return_long_only"], settings)
@@ -285,6 +290,13 @@ def _backtest_walk_forward_payload():
         "buy_hold_xauusd": full_sample_return_stats(bh, active_mask=None),
         "versus_buy_hold_daily": daily_versus_benchmark(sig["strat_return"], bh),
     }
+    if "BCOMGC" in panel.columns and panel["BCOMGC"].notna().any():
+        bcomgc_ret = (
+            panel["BCOMGC"].pct_change(fill_method=None).reindex(sig.index).fillna(0.0)
+        )
+        full_sample_stats["buy_hold_bcomgc"] = full_sample_return_stats(
+            bcomgc_ret, active_mask=None
+        )
     eq = equity_curve(sig["strat_return"])
     eq_lo = equity_curve(sig["strat_return_long_only"])
     bh_eq = equity_curve(bh)
