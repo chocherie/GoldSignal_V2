@@ -51,6 +51,7 @@ def _data_dir() -> Path:
 def _strategy_payload() -> dict:
     tr = resolve_tuning_run_dir(settings)
     return {
+        "version": "v3",
         "source": "tuned" if tr is not None else "production",
         "tuning_run_dir": str(tr) if tr is not None else None,
         "tuning_run_name": tr.name if tr is not None else None,
@@ -184,7 +185,7 @@ def signals_latest():
             cats.append(
                 {
                     "id": L,
-                    "direction": (int(round(float(rv))) if rv == rv else 1),
+                    "direction": (int(round(float(rv))) if rv == rv else 0),
                     "confidence": (float(rc) if rc == rc else None),
                     "raw_score": (float(rz) if rz == rz else None),
                     "title": meta.get("title", f"Category {L}"),
@@ -210,22 +211,16 @@ def signals_latest():
                     direction = int(round(float(dv)))
                     if direction not in (-1, 0, 1):
                         direction = 1 if direction > 0 else -1
-                elif rz is None:
-                    direction = 1
-                elif rz > 0:
-                    direction = 1
-                elif rz < 0:
-                    direction = -1
                 else:
-                    direction = 1
+                    direction = 0  # v3: NaN → abstain
             elif rz is None:
-                direction = 1
+                direction = 0  # v3: missing → abstain
             elif rz > 0:
                 direction = 1
             elif rz < 0:
                 direction = -1
             else:
-                direction = 1
+                direction = 0  # v3: zero → abstain
             meta = SUBSIGNAL_META[sid]
             signal_legs.append(
                 {
@@ -236,11 +231,21 @@ def signals_latest():
                     "direction": direction,
                 }
             )
+        # v3: regime gate info
+        regime = None
+        if "regime_bullish" in sig.columns:
+            rv_regime = last.get("regime_bullish")
+            if rv_regime == rv_regime:  # not NaN
+                regime = "bullish" if float(rv_regime) == 1.0 else "bearish"
+        active_votes = int(last.get("consensus_active_votes", 0)) if "consensus_active_votes" in sig.columns else None
+
         payload = {
             "date": str(sig.index[-1].date()),
             "consensus": {
-                "direction": (int(round(float(cd))) if cd == cd else 1),
+                "direction": (int(round(float(cd))) if cd == cd else 0),
                 "confidence": (float(cc) if cc == cc else None),
+                "active_votes": active_votes,
+                "regime": regime,
             },
             "categories": cats,
             "signal_legs": signal_legs,

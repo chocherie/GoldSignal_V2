@@ -48,14 +48,24 @@ def discrete_deadband(z: pd.Series, tau: float) -> pd.Series:
 
 def discrete_from_z(z: pd.Series, threshold: float = 0.1) -> pd.Series:
     """
-    Map rolling z to {-1, +1} only (always in market on that leg):
-    long if z > 0, short if z < 0, z == 0 → long, NaN → long.
-    (threshold kept for API compatibility; not used for direction.)
+    v3: Map z-score to direction vote: +1 if z > 0, -1 if z < 0.
+    z == 0 → NaN (abstain). NaN → NaN (abstain).
+    Used for level-z signals where z-score IS the directional input.
     """
     _ = threshold
     s = np.sign(z).astype(float)
-    s = s.replace(0.0, 1.0)
-    s = s.fillna(1.0)
+    s = s.replace(0.0, np.nan)  # exact zero → abstain
+    return s
+
+
+def discrete_from_raw(raw: pd.Series) -> pd.Series:
+    """
+    v3: Direction vote from the raw (pre-z) feature value: sign(raw).
+    NaN → NaN (abstain), zero → NaN (abstain).
+    Used for raw-sign features where the z-score is only for confidence.
+    """
+    s = np.sign(raw).astype(float)
+    s = s.replace(0.0, np.nan)  # exact zero → abstain
     return s
 
 

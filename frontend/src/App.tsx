@@ -149,13 +149,13 @@ type Wf = {
 };
 
 const dirLabel = (d: number) =>
-  d === 1 ? "Long" : d === -1 ? "Short" : "Neutral";
+  d === 1 ? "Long" : d === -1 ? "Short" : d === 0 ? "Flat" : "Abstain";
 
 const dirClass = (d: number) =>
   d === 1 ? "tag long" : d === -1 ? "tag short" : "tag neutral";
 
 /** UI release (align with API when you ship both). */
-const SITE_VERSION = "0.2.0";
+const SITE_VERSION = "0.3.0";
 
 /** Hosted static sites must set `VITE_API_BASE` to the FastAPI origin; dev leaves this empty (Vite proxy). */
 const API_BASE = (import.meta.env.VITE_API_BASE ?? "").replace(/\/$/, "");

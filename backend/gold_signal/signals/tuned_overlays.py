@@ -104,11 +104,17 @@ def _apply_category_block(
             raw_w = raw_a_with_momentum_weights(cat, w5, w20, w60)
             blk = raw_w.iloc[sl]
         elif letter == "B":
-            w1 = float(row["w1"]) if pd.notna(row["w1"]) else 0.25
-            w2 = float(row["w2"]) if pd.notna(row["w2"]) else 0.25
-            w3 = float(row["w3"]) if pd.notna(row["w3"]) else 0.25
-            w4 = float(row["w4"]) if pd.notna(row["w4"]) else 0.25
-            raw_w = raw_b_weighted(cat, w1, w2, w3, w4)
+            # v3: B has 3 legs (shadow removed): nom, real, 2s10s
+            w1 = float(row["w1"]) if pd.notna(row["w1"]) else 1.0 / 3.0
+            w2 = float(row["w2"]) if pd.notna(row["w2"]) else 1.0 / 3.0
+            # w3 was shadow in v2; skip it if present, use w4 (or w3) as 2s10s weight
+            if "w4" in row.index and pd.notna(row["w4"]):
+                w3_2s10s = float(row["w4"])
+            elif "w3" in row.index and pd.notna(row["w3"]):
+                w3_2s10s = float(row["w3"])
+            else:
+                w3_2s10s = 1.0 / 3.0
+            raw_w = raw_b_weighted(cat, w1, w2, w3_2s10s)
             blk = raw_w.iloc[sl]
         elif letter == "F":
             wc = float(row["w_cot"]) if pd.notna(row["w_cot"]) else 0.5

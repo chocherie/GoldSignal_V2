@@ -27,7 +27,7 @@ def test_health_and_latest_json_no_nan():
         raw = json.dumps(j.json())
         assert "NaN" not in raw and "nan" not in raw.lower()
         data = j.json()
-        assert data["consensus"]["direction"] in (-1, 1)
+        assert data["consensus"]["direction"] in (-1, 0, 1)  # v3: 0 = flat (abstention / regime gate)
         wf = ac.get("/api/v1/walk-forward")
         assert wf.status_code == 200
         assert "walk_forward" in wf.json()

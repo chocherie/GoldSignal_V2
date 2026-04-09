@@ -43,6 +43,16 @@ class Settings:
     include_gpr: bool = field(
         default_factory=lambda: os.environ.get("GOLD_INCLUDE_GPR", "").lower() in ("1", "true", "yes")
     )
+    # --- v3 additions ---
+    holdout_start: str = field(
+        default_factory=lambda: os.environ.get("GOLD_HOLDOUT_START", "2023-04-01")
+    )
+    min_active_votes: int = field(
+        default_factory=lambda: int(os.environ.get("GOLD_MIN_ACTIVE_VOTES", "3"))
+    )
+    regime_sma_window: int = field(
+        default_factory=lambda: int(os.environ.get("GOLD_REGIME_SMA_WINDOW", "200"))
+    )
     # When true (default), use latest ``data/tuning_runs/<run>/`` (or ``tuning_run_dir``) for WF τ / weights.
     # Set ``GOLD_USE_LATEST_TUNING=0`` to force production ``discrete_from_z`` only.
     use_latest_tuning: bool = field(

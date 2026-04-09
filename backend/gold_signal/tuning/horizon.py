@@ -33,10 +33,10 @@ def raw_a_with_momentum_weights(cat: pd.DataFrame, w5: float, w20: float, w60: f
     )
 
 
-def raw_b_weighted(cat: pd.DataFrame, wn: float, wr: float, ws: float, wc: float) -> pd.Series:
-    """Weighted sum of B sub-zs with row-wise renormalization over available legs."""
-    cols = ["subz_B_nom", "subz_B_real", "subz_B_shadow", "subz_B_2s10s"]
-    w = np.array([wn, wr, ws, wc], dtype=float)
+def raw_b_weighted(cat: pd.DataFrame, wn: float, wr: float, wc: float) -> pd.Series:
+    """Weighted sum of B sub-zs with row-wise renormalization (v3: shadow removed)."""
+    cols = ["subz_B_nom", "subz_B_real", "subz_B_2s10s"]
+    w = np.array([wn, wr, wc], dtype=float)
     z = cat[cols].to_numpy(dtype=float)
     mask = np.isfinite(z)
     w_row = w.reshape(1, -1) * mask
@@ -85,13 +85,14 @@ A_MOM_WEIGHT_TRIPLES: list[tuple[float, float, float]] = [
     (0.1, 0.2, 0.7),
 ]
 
-B_WEIGHT_QUADS: list[tuple[float, float, float, float]] = [
-    (0.25, 0.25, 0.25, 0.25),
-    (0.5, 0.2, 0.2, 0.1),
-    (0.2, 0.5, 0.2, 0.1),
-    (0.2, 0.2, 0.5, 0.1),
-    (0.1, 0.2, 0.2, 0.5),
-    (0.4, 0.3, 0.2, 0.1),
+# v3: B has 3 legs (shadow removed): nom, real, 2s10s
+B_WEIGHT_TRIPLES: list[tuple[float, float, float]] = [
+    (1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0),
+    (0.5, 0.3, 0.2),
+    (0.3, 0.5, 0.2),
+    (0.2, 0.3, 0.5),
+    (0.4, 0.4, 0.2),
+    (0.2, 0.2, 0.6),
 ]
 
 F_COT_ETF_WEIGHTS: list[tuple[float, float]] = [(0.5, 0.5), (0.25, 0.75), (0.75, 0.25), (0.4, 0.6), (0.6, 0.4)]
