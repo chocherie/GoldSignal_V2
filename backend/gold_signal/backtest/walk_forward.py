@@ -248,11 +248,32 @@ def equity_backtest_block(
     max_points: int,
     cfg: Settings | None = None,
     book_mix_long_only: bool = False,
+    lightweight: bool = False,
 ) -> dict:
-    """Walk-forward, Sharpe, return, equity curve, direction mix — shared by full vs long-only lanes."""
+    """Walk-forward, Sharpe, return, equity curve, direction mix — shared by full vs long-only lanes.
+
+    If ``lightweight=True``, skip walk-forward computation and equity curve to save memory.
+    Used for per-subsignal backtests on memory-constrained hosts.
+    """
     cfg = cfg or settings
     n = len(sig)
     eq = equity_curve(sr)
+    fulleq = float(eq.iloc[-1]) if n else 1.0
+    mix = _long_only_book_mix(mix_d) if book_mix_long_only else _direction_mix_pct(mix_d)
+    cagr = cagr_pct_from_equity_multiple(fulleq, n) if n > 1 else float("nan")
+
+    if lightweight:
+        # Skip walk-forward and equity curve to save memory on constrained hosts.
+        # Only compute full-sample Sharpe and CAGR.
+        return {
+            "walk_forward": {"n_steps": 0, "mean_oos_sharpe": None},
+            "sharpe_full_sample": annualized_sharpe(sr),
+            "equity_end_multiple": fulleq,
+            "total_return_pct": float(cagr) if cagr == cagr and not math.isnan(cagr) else None,
+            "direction_mix_pct": mix,
+            "equity_tail_rebased": [],
+        }
+
     s0 = float(eq.iloc[start]) if n > start else 1.0
     s0 = s0 if s0 else 1.0
     tail_curve = [
@@ -261,9 +282,6 @@ def equity_backtest_block(
     ]
     tail_curve = downsample_equity_points(tail_curve, max_points)
     wf = walk_forward_report(sr, cfg)
-    fulleq = float(eq.iloc[-1]) if n else 1.0
-    mix = _long_only_book_mix(mix_d) if book_mix_long_only else _direction_mix_pct(mix_d)
-    cagr = cagr_pct_from_equity_multiple(fulleq, n) if n > 1 else float("nan")
     return {
         "walk_forward": wf,
         "sharpe_full_sample": annualized_sharpe(sr),
@@ -344,8 +362,11 @@ def per_subsignal_backtests(
         d = discrete_from_z(sig[zcol], cfg.threshold)
         di = d.fillna(0.0).round().clip(-1, 1).astype(int)
         meta = SUBSIGNAL_META.get(sid, {})
+        # Use lightweight mode to reduce memory on constrained hosts (Render free tier)
+        lite = os.environ.get("GOLD_LIGHTWEIGHT_SUBSIGNAL", "1").strip().lower() in ("1", "true", "yes")
         base = equity_backtest_block(
-            sr, sig, di, start=start, max_points=max_points, cfg=cfg, book_mix_long_only=False
+            sr, sig, di, start=start, max_points=max_points, cfg=cfg,
+            book_mix_long_only=False, lightweight=lite,
         )
         out[sid] = {
             "id": sid,
@@ -362,5 +383,6 @@ def per_subsignal_backtests(
                 max_points=max_points,
                 cfg=cfg,
                 book_mix_long_only=True,
+                lightweight=lite,
             )
     return out
