@@ -433,7 +433,8 @@ def build_signal_table(panel: pd.DataFrame, cfg: Settings | None = None) -> pd.D
     if run_dir is not None:
         apply_latest_tuning_overlays(cat, cfg, run_dir)
     sig = attach_consensus(cat, panel, cfg)
-    drop = [c for c in sig.columns if str(c).startswith("tuned_dir_")]
+    # Drop columns only needed during build, not for API / backtest
+    drop = [c for c in sig.columns if str(c).startswith("tuned_dir_") or str(c).startswith("raw_feat_")]
     if drop:
         sig = sig.drop(columns=drop)
     return sig.copy()
