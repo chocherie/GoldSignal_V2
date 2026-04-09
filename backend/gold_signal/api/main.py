@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import gc
 import logging
 import os
 import time
@@ -78,6 +79,7 @@ def get_signal_frame():
     _cache = (panel, meta, sig)
     _cache_loaded_at = now
     _cache_tuning_key = tuning_key
+    gc.collect()  # free Supabase HTTP buffers / intermediate DataFrames
     return _cache
 
 
@@ -346,6 +348,23 @@ def _backtest_walk_forward_payload():
     )
     sub_bt = per_subsignal_backtests(sig, max_points=sub_max_pts, cfg=settings)
 
+    # Strip per-entry walk_forward.steps from category & subsignal backtests —
+    # the frontend only reads mean_oos_sharpe; steps are only needed for the
+    # main scatter chart (top-level walk_forward).  This cuts ~50% off the JSON.
+    def _strip_wf_steps(bt: dict) -> None:
+        for entry in bt.values():
+            wf = entry.get("walk_forward")
+            if isinstance(wf, dict):
+                wf.pop("steps", None)
+            lo = entry.get("long_only")
+            if isinstance(lo, dict):
+                lo_wf = lo.get("walk_forward")
+                if isinstance(lo_wf, dict):
+                    lo_wf.pop("steps", None)
+
+    _strip_wf_steps(cat_bt)
+    _strip_wf_steps(sub_bt)
+
     mix_bh = pd.Series(1.0, index=sig.index)
     buy_hold_bt = equity_backtest_block(
         bh,
@@ -365,6 +384,10 @@ def _backtest_walk_forward_payload():
         cfg=settings,
         book_mix_long_only=False,
     )["equity_tail_rebased"]
+    # Strip buy-hold steps too (frontend only uses mean_oos_sharpe).
+    bh_wf = buy_hold_bt.get("walk_forward")
+    if isinstance(bh_wf, dict):
+        bh_wf.pop("steps", None)
 
     return sanitize(
         {
