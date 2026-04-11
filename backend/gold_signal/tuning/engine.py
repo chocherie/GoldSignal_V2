@@ -20,7 +20,7 @@ from gold_signal.tuning.constants import ABSTAIN_SUBLEG_IDS
 from gold_signal.tuning.deflated_sharpe import deflated_sharpe_haircut, expected_sharpe_selection_bias
 from gold_signal.tuning.horizon import (
     A_MOM_WEIGHT_TRIPLES,
-    B_WEIGHT_QUADS,
+    B_WEIGHT_TRIPLES,
     F_COT_ETF_WEIGHTS,
     raw_a_with_momentum_weights,
     raw_b_weighted,
@@ -198,10 +198,10 @@ def run_wf_tune(
 
         # --- category B ---
         def raw_b(w):
-            return raw_b_weighted(cat, w[0], w[1], w[2], w[3])
+            return raw_b_weighted(cat, w[0], w[1], w[2])
 
         w_star, tau_b, is_w, is_f, oos_b, n_w = _best_weights_then_tau(
-            cat, r, b, taus, B_WEIGHT_QUADS, raw_b
+            cat, r, b, taus, B_WEIGHT_TRIPLES, raw_b
         )
         cat_rows.append(
             {

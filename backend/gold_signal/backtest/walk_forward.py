@@ -125,6 +125,33 @@ def oos_sharpe_vs_buy_hold_summary(steps: list[dict]) -> dict:
     }
 
 
+def _walk_forward_mean_only(
+    strat_returns: pd.Series,
+    cfg: Settings | None = None,
+) -> dict:
+    """Compute mean OOS Sharpe without building a steps list — memory-friendly.
+
+    Returns a walk_forward-shaped dict with n_steps and mean_oos_sharpe only.
+    """
+    cfg = cfg or settings
+    warm = wf_warmup_days(cfg)
+    s = strat_returns.dropna()
+    idx = s.index
+    oos_d = cfg.wf_oos_days
+    if len(idx) < warm + oos_d + 5:
+        return {"n_steps": 0, "mean_oos_sharpe": None}
+
+    sharps: list[float] = []
+    for b in iter_wf_step_bounds(len(idx), cfg):
+        oos_slice = s.iloc[b.oos_start : b.oos_end]
+        sh = _sharpe(oos_slice)
+        if sh == sh:  # not NaN
+            sharps.append(sh)
+
+    mean_s = float(np.nanmean(sharps)) if sharps else None
+    return {"n_steps": len(sharps), "mean_oos_sharpe": mean_s}
+
+
 def walk_forward_report(
     strat_returns: pd.Series,
     cfg: Settings | None = None,
@@ -263,10 +290,11 @@ def equity_backtest_block(
     cagr = cagr_pct_from_equity_multiple(fulleq, n) if n > 1 else float("nan")
 
     if lightweight:
-        # Skip walk-forward and equity curve to save memory on constrained hosts.
-        # Only compute full-sample Sharpe and CAGR.
+        # Compute mean OOS Sharpe without building the full steps list or equity curve.
+        # This avoids the memory spike from 54 full walk-forward runs on Render free tier.
+        wf_lite = _walk_forward_mean_only(sr, cfg)
         return {
-            "walk_forward": {"n_steps": 0, "mean_oos_sharpe": None},
+            "walk_forward": wf_lite,
             "sharpe_full_sample": annualized_sharpe(sr),
             "equity_end_multiple": fulleq,
             "total_return_pct": float(cagr) if cagr == cagr and not math.isnan(cagr) else None,
